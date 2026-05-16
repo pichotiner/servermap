@@ -27,7 +27,7 @@ export default function App() {
     if (!config?.worlds?.length) return;
     const w = config.worlds[0];
     setCurrentWorld(w.name);
-    if (w.maps?.length) setCurrentRenderer(w.maps[0].name);
+    if (w.maps?.length) setCurrentRenderer(w.maps[0].prefix || w.maps[0].name);
   }, [config]);
 
   const handlePlayerClick = (player) => {

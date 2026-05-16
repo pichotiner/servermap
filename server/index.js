@@ -10,6 +10,12 @@ const DYNMAP_BASE = process.env.DYNMAP_URL || 'http://127.0.0.1:8123';
 
 app.use(cors());
 
+// Log all incoming requests
+app.use((req, _res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
+
 // Proxy tile requests
 app.use('/tiles', createProxyMiddleware({
   target: DYNMAP_BASE,
