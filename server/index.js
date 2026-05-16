@@ -28,14 +28,15 @@ app.use('/up', createProxyMiddleware({
   changeOrigin: true,
 }));
 
-// Skin face endpoint — fetches the 8x8 face region from Crafatar
-app.get('/api/skin/:uuid', async (req, res) => {
+// Skin face endpoint — Dynmap only exposes the player name (no UUID),
+// so use mc-heads.net, which resolves faces by username or UUID.
+app.get('/api/skin/:id', async (req, res) => {
   try {
-    const { uuid } = req.params;
+    const { id } = req.params;
     const size = req.query.size || 32;
-    const url = `https://crafatar.com/avatars/${uuid}?size=${size}&overlay=true`;
+    const url = `https://mc-heads.net/avatar/${encodeURIComponent(id)}/${size}`;
     const response = await fetch(url, { timeout: 5000 });
-    if (!response.ok) throw new Error('crafatar error');
+    if (!response.ok) throw new Error('skin source error');
     res.set('Content-Type', 'image/png');
     res.set('Cache-Control', 'public, max-age=3600');
     response.body.pipe(res);

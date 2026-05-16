@@ -52,27 +52,35 @@ Browser → nginx :80 → Express :3001
 
 ### Dynmap tile coordinate system
 
-This is the most complex part of the codebase. Dynmap stores tiles as:
+This is the most complex part of the codebase. Dynmap stores tiles as
+(see Dynmap's own `hdmap.js` — `getTileName` / `getTileInfo`):
 ```
-/tiles/{world}/{renderer}/{regionX}_{regionZ}/{prefix}{localX}_{localZ}.jpg
+/tiles/{world}/{prefix}/{x>>5}_{y>>5}/{zoom}{x}_{y}.{fmt}
 ```
 
 Key facts:
-- **32×32 native tiles per region** (`TILES_PER_REGION = 32`)
+- **Directory groups 32 tiles per axis** (`x>>5`, `y>>5`); the filename keeps the **full** tile coordinate, not an offset within the directory.
+- **Y axis is inverted**: the Dynmap tile coordinate is `-(leafletY * scale)`.
 - **Zoom-out prefix** uses repeated `z`: native = `""`, zoom-out-1 = `"z_"`, zoom-out-2 = `"zz_"`, ..., zoom-out-5 = `"zzzzz_"` — NOT `"z1_"`, `"z2_"` etc.
 - **`mapzoomout`** from config (typically 5) = number of zoom-out levels = Leaflet `maxZoom`
-- At Leaflet zoom `z`, the Dynmap zoom-out level is `maxZoom - z` (Leaflet zoom 0 = most zoomed out = longest prefix)
-- Local tile coordinates are **native tile offsets** within the region (0–31), not divided by scale
+- At Leaflet zoom `z`, the Dynmap zoom-out level is `maxZoom - z` (Leaflet zoom 0 = most zoomed out = longest prefix); tile coordinate `= leafletCoord << zoomOutLevel`.
+- **Image format** (`{fmt}`) comes from the map's `image-format` field in the config (default `png`) — it is NOT always `jpg`.
 
 The `dynmapUrl()` function in `DynmapLayer.jsx` implements all of this. When modifying tile logic, verify against actual files on disk at `/home/pichotiner/ServerMine/dynmap/web/tiles/`.
 
 ### Player coordinate conversion
 
-Dynmap's `worldtomap` matrix for the flat renderer: `[4, 0, 0, 0, 0, -4, 0, 1, 0]`
-- `map_x = 4 * block_x`
-- `map_y = -4 * block_z` (note: z-axis is negated)
-
-`PlayerMarkers` uses `map.unproject([px, py], maxZoom)` where `px = block_x * (2^maxZoom / 32)` and similarly for py. This must stay in sync with `DynmapLayer`'s tile coordinate system.
+`PlayerMarkers` converts a Minecraft `(x, y, z)` position to a Leaflet
+`LatLng` with Dynmap's own `HDProjection.fromLocationToLatLng` formula
+(`hdmap.js`), reading `worldtomap`, `mapzoomout` and `tilescale` from the
+map config so it stays in sync with `DynmapLayer`:
+```
+lng = (worldtomap[0]*x + worldtomap[1]*y + worldtomap[2]*z) / (1 << mapzoomout)
+mapY = worldtomap[3]*x + worldtomap[4]*y + worldtomap[5]*z
+lat = -(((128 << tilescale) - mapY) / (1 << mapzoomout))
+```
+For the flat renderer `worldtomap` is `[4, 0, 0, 0, 0, -4, 0, 1, 0]`
+(`map_x = 4*block_x`, `map_y = -4*block_z`).
 
 ## Production deployment (Ubuntu + nginx + pm2)
 

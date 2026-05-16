@@ -61,7 +61,13 @@ export default function App() {
           attributionControl={false}
         >
           <DynmapLayer world={currentWorld} renderer={currentRenderer} config={config} />
-          <PlayerMarkers players={players} focusPlayer={focusPlayer} />
+          <PlayerMarkers
+            players={players}
+            focusPlayer={focusPlayer}
+            config={config}
+            world={currentWorld}
+            renderer={currentRenderer}
+          />
           <MapControls
             config={config}
             currentWorld={currentWorld}
