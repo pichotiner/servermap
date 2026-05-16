@@ -29,11 +29,11 @@ function buildIcon(id, name) {
       ">
         <div style="
           width:38px;height:38px;
-          border:2px solid #58a6ff;
+          border:2px solid #ffe16e;
           border-radius:6px;
-          background:#0d1117;
+          background:#1a1a1a;
           overflow:hidden;
-          box-shadow:0 2px 8px rgba(0,0,0,0.7);
+          box-shadow:0 2px 8px rgba(0,0,0,0.8);
         ">
           <img
             src="${src}"
@@ -42,13 +42,13 @@ function buildIcon(id, name) {
           />
         </div>
         <span style="
-          background:rgba(13,17,23,0.85);
-          color:#e6edf3;
+          background:rgba(20,20,20,0.92);
+          color:#e8e8e8;
           font-size:11px;
           font-weight:600;
           padding:1px 5px;
           border-radius:4px;
-          border:1px solid #30363d;
+          border:1px solid #3a3a3a;
           white-space:nowrap;
           font-family:system-ui,sans-serif;
         ">${name}</span>

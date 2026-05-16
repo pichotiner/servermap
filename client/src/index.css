@@ -5,15 +5,15 @@
 }
 
 :root {
-  --bg: #0d1117;
-  --surface: #161b22;
-  --surface2: #21262d;
-  --border: #30363d;
-  --text: #e6edf3;
-  --text-muted: #8b949e;
+  --bg: #141414;
+  --surface: #1f1f1f;
+  --surface2: #2b2b2b;
+  --border: #3a3a3a;
+  --text: #e8e8e8;
+  --text-muted: #8f8f8f;
   --green: #3fb950;
   --red: #f85149;
-  --accent: #58a6ff;
+  --accent: #ffe16e;
 }
 
 body {
@@ -30,6 +30,29 @@ body {
   flex-direction: column;
 }
 
+/* Unrendered / empty tiles show through as black */
 .leaflet-container {
-  background: #1a1a2e;
+  background: #000;
+}
+
+.leaflet-tile {
+  background: #000;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
 }

@@ -82,7 +82,7 @@ const styles = {
     borderRadius: 10,
     padding: '1px 7px',
     fontSize: 12,
-    color: 'var(--green)',
+    color: 'var(--accent)',
     fontWeight: 700,
   },
   list: {

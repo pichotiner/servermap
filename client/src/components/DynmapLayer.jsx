@@ -37,8 +37,13 @@ export default function DynmapLayer({ world, renderer, config }) {
     const DynmapGrid = L.GridLayer.extend({
       createTile(coords, done) {
         const tile = document.createElement('img');
+        tile.alt = '';
         tile.onload = () => done(null, tile);
-        tile.onerror = () => done(null, tile);
+        tile.onerror = () => {
+          // Missing tile — hide the broken image so the black map shows through
+          tile.style.display = 'none';
+          done(null, tile);
+        };
         tile.src = dynmapUrl(world, renderer, maxZoom, fmt, coords.x, coords.y, coords.z);
         return tile;
       },
