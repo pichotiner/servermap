@@ -34,10 +34,10 @@ export default function DynmapLayer({ world, renderer, config }) {
     }
 
     const DynmapGrid = L.GridLayer.extend({
-      createTile(coords) {
+      createTile(coords, done) {
         const tile = document.createElement('img');
-        tile.style.width = '128px';
-        tile.style.height = '128px';
+        tile.onload = () => done(null, tile);
+        tile.onerror = () => done(null, tile);
         tile.src = dynmapUrl(world, renderer, maxZoom, coords.x, coords.y, coords.z);
         return tile;
       },
