@@ -62,8 +62,6 @@ function buildIcon(id, name) {
 export default function PlayerMarkers({ players, focusPlayer, onFocusComplete, config, world, renderer }) {
   const map = useMap();
   const markersRef = useRef({});
-  // Track which world we've already auto-centred on so we re-centre once per world switch.
-  const autocenteredWorldRef = useRef(null);
 
   const worldConfig = config?.worlds?.find(w => w.name === world);
   const mapConfig = worldConfig?.maps?.find(m => m.prefix === renderer || m.name === renderer);
@@ -75,19 +73,6 @@ export default function PlayerMarkers({ players, focusPlayer, onFocusComplete, c
     // Only show markers for players actually in the world being viewed —
     // someone in the Nether must not appear on the Overworld map.
     const visible = players.filter(p => p.world === world);
-
-    // Auto-fit all players into view the first time we see them in this world.
-    if (autocenteredWorldRef.current !== world && visible.length > 0) {
-      autocenteredWorldRef.current = world;
-      const latlngs = visible.map(p =>
-        mcToLatLng(worldtomap, mapzoomout, tilescale, p.x ?? 0, p.y ?? 0, p.z ?? 0)
-      );
-      if (latlngs.length === 1) {
-        map.setView(latlngs[0], mapzoomout);
-      } else {
-        map.fitBounds(L.latLngBounds(latlngs), { maxZoom: mapzoomout, padding: [60, 60] });
-      }
-    }
     const currentNames = new Set(visible.map(p => p.account));
 
     // Remove stale markers
