@@ -28,6 +28,8 @@ export default function DynmapLayer({ world, renderer, config }) {
     const mapConfig = worldConfig?.maps?.find(m => m.prefix === renderer || m.name === renderer);
     const maxZoom = mapConfig?.mapzoomout ?? 5;
     const fmt = mapConfig?.['image-format'] || 'png';
+    const tilescale = mapConfig?.tilescale ?? 0;
+    const tileSize = 128 << tilescale;
 
     if (layerRef.current) {
       map.removeLayer(layerRef.current);
@@ -50,7 +52,7 @@ export default function DynmapLayer({ world, renderer, config }) {
     });
 
     const layer = new DynmapGrid({
-      tileSize: 128,
+      tileSize,
       minZoom: 0,
       // Dynmap only renders tiles up to `maxZoom` (mapzoomout); beyond that
       // Leaflet must upscale them instead of dropping the layer entirely.
