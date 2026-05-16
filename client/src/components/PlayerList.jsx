@@ -1,5 +1,18 @@
 import React, { useState } from 'react';
 
+function worldLabel(name) {
+  const n = (name || '').toLowerCase();
+  if (n === 'dim-1' || n.includes('nether')) return 'Незер';
+  if (n === 'dim1' || n.includes('the_end') || n.endsWith('_end')) return 'Энд';
+  if (n === 'world' || n.includes('overworld')) return 'Обычный мир';
+  return name || '';
+}
+
+function fmtCoords(p) {
+  if (p.x == null || p.z == null) return null;
+  return `${Math.round(p.x)}, ${Math.round(p.y ?? 0)}, ${Math.round(p.z)}`;
+}
+
 export default function PlayerList({ players, onPlayerClick }) {
   const [collapsed, setCollapsed] = useState(false);
 
@@ -18,20 +31,24 @@ export default function PlayerList({ players, onPlayerClick }) {
             <span style={styles.badge}>{players.length}</span>
           </div>
           <div style={styles.list}>
-            {players.map(p => (
-              <button key={p.account} style={styles.row} onClick={() => onPlayerClick(p)}>
-                <img
-                  src={`/api/skin/${p.uuid || p.account}?size=32`}
-                  alt={p.account}
-                  style={styles.avatar}
-                  onError={e => { e.target.src = '/steve.png'; }}
-                />
-                <div style={styles.info}>
-                  <span style={styles.name}>{p.account}</span>
-                  <span style={styles.world}>{p.world}</span>
-                </div>
-              </button>
-            ))}
+            {players.map(p => {
+              const coords = fmtCoords(p);
+              return (
+                <button key={p.account} style={styles.row} onClick={() => onPlayerClick(p)}>
+                  <img
+                    src={`/api/skin/${p.uuid || p.account}?size=32`}
+                    alt={p.account}
+                    style={styles.avatar}
+                    onError={e => { e.target.src = '/steve.png'; }}
+                  />
+                  <div style={styles.info}>
+                    <span style={styles.name}>{p.account}</span>
+                    <span style={styles.world}>{worldLabel(p.world)}</span>
+                    {coords && <span style={styles.coords}>{coords}</span>}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </>
       )}
@@ -82,7 +99,7 @@ const styles = {
     borderRadius: 10,
     padding: '1px 7px',
     fontSize: 12,
-    color: 'var(--green)',
+    color: 'var(--accent)',
     fontWeight: 700,
   },
   list: {
@@ -128,5 +145,13 @@ const styles = {
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
+  },
+  coords: {
+    fontSize: 11,
+    color: 'var(--accent)',
+    fontFamily: 'ui-monospace, "Cascadia Code", Consolas, monospace',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
 };

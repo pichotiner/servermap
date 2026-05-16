@@ -5,15 +5,15 @@
 }
 
 :root {
-  --bg: #0d1117;
-  --surface: #161b22;
-  --surface2: #21262d;
-  --border: #30363d;
-  --text: #e6edf3;
-  --text-muted: #8b949e;
+  --bg: #141414;
+  --surface: #1f1f1f;
+  --surface2: #2b2b2b;
+  --border: #3a3a3a;
+  --text: #e8e8e8;
+  --text-muted: #8f8f8f;
   --green: #3fb950;
   --red: #f85149;
-  --accent: #58a6ff;
+  --accent: #ffe16e;
 }
 
 body {
@@ -30,6 +30,163 @@ body {
   flex-direction: column;
 }
 
+/* Unrendered / empty tiles show through as black */
 .leaflet-container {
-  background: #1a1a2e;
+  background: #000;
+}
+
+.leaflet-tile {
+  background: #000;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border);
+}
+
+/* ---- Top status bar ---- */
+.statusbar {
+  height: 52px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 1000;
+}
+
+.statusbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.statusbar-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 0 0 auto;
+}
+
+.statusbar-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.statusbar-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.statusbar-status {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.statusbar-players {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.statusbar-players svg {
+  color: var(--accent);
+}
+
+.statusbar-count {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.statusbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Dark gray stone block logo */
+.logo-block {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: 3px;
+  background:
+    radial-gradient(circle at 32% 34%, rgba(0, 0, 0, 0.28) 0 3px, transparent 4px),
+    radial-gradient(circle at 70% 66%, rgba(0, 0, 0, 0.22) 0 2px, transparent 3px),
+    radial-gradient(circle at 62% 24%, rgba(255, 255, 255, 0.06) 0 2px, transparent 3px),
+    #4a4a4a;
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.08),
+    inset 0 -3px 0 rgba(0, 0, 0, 0.4),
+    0 1px 2px rgba(0, 0, 0, 0.6);
+}
+
+@media (max-width: 620px) {
+  .statusbar {
+    height: 46px;
+    gap: 8px;
+    padding: 0 10px;
+  }
+
+  .statusbar-right {
+    gap: 10px;
+  }
+
+  .statusbar-title {
+    font-size: 13px;
+  }
+
+  .statusbar-status {
+    display: none;
+  }
+
+  .statusbar-players {
+    font-size: 12px;
+  }
+
+  .statusbar-brand-text {
+    display: none;
+  }
+
+  .logo-block {
+    width: 22px;
+    height: 22px;
+  }
 }

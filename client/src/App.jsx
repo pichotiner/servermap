@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -9,6 +9,7 @@ import PlayerList from './components/PlayerList';
 import PlayerMarkers from './components/PlayerMarkers';
 import DynmapLayer from './components/DynmapLayer';
 import MapControls from './components/MapControls';
+import CursorCoords from './components/CursorCoords';
 
 // Simple CRS matching Dynmap flat projection
 const DynmapCRS = L.extend({}, L.CRS.Simple, {
@@ -22,18 +23,31 @@ export default function App() {
 
   const { config, players, online, error } = useDynmap(currentWorld);
 
-  // Once config loads, pick the first world and its first map
+  // Pick the first world and its first map — only once, when config loads
+  const initRef = useRef(false);
   useEffect(() => {
-    if (!config?.worlds?.length) return;
+    if (initRef.current || !config?.worlds?.length) return;
+    initRef.current = true;
     const w = config.worlds[0];
     setCurrentWorld(w.name);
     if (w.maps?.length) setCurrentRenderer(w.maps[0].prefix || w.maps[0].name);
   }, [config]);
 
+  // Switching world also resets the renderer to a map that exists in it
+  const handleWorldChange = (worldName) => {
+    setCurrentWorld(worldName);
+    const w = config?.worlds?.find(x => x.name === worldName);
+    const firstMap = w?.maps?.[0];
+    if (firstMap) setCurrentRenderer(firstMap.prefix || firstMap.name);
+  };
+
+  // Clicking a player focuses them — switching to their world first if the
+  // player is in a different dimension than the one currently shown.
   const handlePlayerClick = (player) => {
+    if (player.world && player.world !== currentWorld) {
+      handleWorldChange(player.world);
+    }
     setFocusPlayer(player.account);
-    // Clear focus after pan so clicking again still works
-    setTimeout(() => setFocusPlayer(null), 300);
   };
 
   // The map's parent is position:relative, so fill it explicitly —
@@ -61,13 +75,25 @@ export default function App() {
           attributionControl={false}
         >
           <DynmapLayer world={currentWorld} renderer={currentRenderer} config={config} />
-          <PlayerMarkers players={players} focusPlayer={focusPlayer} />
+          <PlayerMarkers
+            players={players}
+            focusPlayer={focusPlayer}
+            onFocusComplete={() => setFocusPlayer(null)}
+            config={config}
+            world={currentWorld}
+            renderer={currentRenderer}
+          />
           <MapControls
             config={config}
             currentWorld={currentWorld}
             currentRenderer={currentRenderer}
-            onWorldChange={w => { setCurrentWorld(w); }}
-            onRendererChange={r => setCurrentRenderer(r)}
+            onWorldChange={handleWorldChange}
+            onRendererChange={setCurrentRenderer}
+          />
+          <CursorCoords
+            config={config}
+            world={currentWorld}
+            renderer={currentRenderer}
           />
         </MapContainer>
 
