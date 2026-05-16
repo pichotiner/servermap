@@ -16,10 +16,17 @@ app.use((req, _res, next) => {
   next();
 });
 
-// Proxy tile requests
+// Proxy tile requests. Force revalidation so freshly rendered tiles
+// (and tiles that 404'd before Dynmap rendered them) are picked up
+// instead of being served stale from the browser cache.
 app.use('/tiles', createProxyMiddleware({
   target: DYNMAP_BASE,
   changeOrigin: true,
+  onProxyRes(proxyRes) {
+    proxyRes.headers['cache-control'] = 'no-cache';
+    delete proxyRes.headers['expires'];
+    delete proxyRes.headers['pragma'];
+  },
 }));
 
 // Proxy dynmap data endpoints
