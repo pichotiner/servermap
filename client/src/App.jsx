@@ -66,7 +66,7 @@ export default function App() {
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         <MapContainer
           center={[0, 0]}
-          zoom={0}
+          zoom={3}
           minZoom={0}
           maxZoom={8}
           crs={DynmapCRS}

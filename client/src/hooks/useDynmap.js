@@ -10,10 +10,12 @@ export function useDynmap(worldName = 'world') {
   const timestampRef = useRef(0);
   const timerRef = useRef(null);
 
-  // Configuration is global — fetch it once.
+  // Fetch config on mount, retry every 5s until success.
   useEffect(() => {
     let active = true;
-    (async () => {
+    let retryTimer = null;
+
+    const fetchConfig = async () => {
       try {
         const res = await fetch(`${API}/up/configuration`);
         if (!res.ok) throw new Error(`config ${res.status}`);
@@ -26,10 +28,16 @@ export function useDynmap(worldName = 'world') {
         if (active) {
           setError(e.message);
           setOnline(false);
+          retryTimer = setTimeout(fetchConfig, 5000);
         }
       }
-    })();
-    return () => { active = false; };
+    };
+
+    fetchConfig();
+    return () => {
+      active = false;
+      clearTimeout(retryTimer);
+    };
   }, []);
 
   // Poll the selected world for live player positions; restart on change.
