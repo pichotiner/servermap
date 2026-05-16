@@ -27,7 +27,7 @@ export default function App() {
     if (!config?.worlds?.length) return;
     const w = config.worlds[0];
     setCurrentWorld(w.name);
-    if (w.maps?.length) setCurrentRenderer(w.maps[0].name);
+    if (w.maps?.length) setCurrentRenderer(w.maps[0].prefix || w.maps[0].name);
   }, [config]);
 
   const handlePlayerClick = (player) => {
@@ -50,15 +50,15 @@ export default function App() {
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         <MapContainer
           center={[0, 0]}
-          zoom={2}
+          zoom={0}
           minZoom={0}
-          maxZoom={6}
+          maxZoom={8}
           crs={DynmapCRS}
           style={mapStyle}
           zoomControl={false}
           attributionControl={false}
         >
-          <DynmapLayer world={currentWorld} renderer={currentRenderer} />
+          <DynmapLayer world={currentWorld} renderer={currentRenderer} config={config} />
           <PlayerMarkers players={players} focusPlayer={focusPlayer} />
           <MapControls
             config={config}

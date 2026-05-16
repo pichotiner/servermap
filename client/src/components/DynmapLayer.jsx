@@ -2,53 +2,65 @@ import { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 
-// Converts Minecraft X/Z to Leaflet lat/lng for the Dynmap flat projection
-function mcToLatLng(x, z, map) {
-  // Dynmap flat: each tile = 128 blocks, tileSize=128
-  // The CRS maps x→lng, z→lat with y inverted
-  return map.unproject([x, z], map.getMaxZoom());
+const TILES_PER_REGION = 32;
+
+function dynmapUrl(world, renderer, maxZoom, x, y, z) {
+  const zOut = maxZoom - z;
+  const scale = 1 << zOut;
+  const nativeTx = x * scale;
+  const nativeTy = y * scale;
+  const regionX = Math.floor(nativeTx / TILES_PER_REGION);
+  const regionZ = Math.floor(nativeTy / TILES_PER_REGION);
+  const localX = ((nativeTx % TILES_PER_REGION) + TILES_PER_REGION) % TILES_PER_REGION;
+  const localZ = ((nativeTy % TILES_PER_REGION) + TILES_PER_REGION) % TILES_PER_REGION;
+  const prefix = zOut === 0 ? '' : 'z'.repeat(zOut) + '_';
+  return `/tiles/${world}/${renderer}/${regionX}_${regionZ}/${prefix}${localX}_${localZ}.jpg`;
 }
 
-export default function DynmapLayer({ world, renderer }) {
+export default function DynmapLayer({ world, renderer, config }) {
   const map = useMap();
   const layerRef = useRef(null);
 
   useEffect(() => {
-    if (!world || !renderer) return;
+    if (!world || !renderer || !config) return;
+
+    const worldConfig = config.worlds?.find(w => w.name === world);
+    const mapConfig = worldConfig?.maps?.find(m => m.prefix === renderer || m.name === renderer);
+    const maxZoom = mapConfig?.mapzoomout ?? 5;
 
     if (layerRef.current) {
       map.removeLayer(layerRef.current);
+      layerRef.current = null;
     }
 
-    // Dynmap uses a custom CRS — we mirror it with a simple TileLayer
-    // URL pattern: /tiles/{world}/{renderer}/{z}/{x}_{y}.png
-    // Leaflet expects {z}/{x}/{y}, so we use a custom getTileUrl
-    const layer = L.tileLayer('', {
-      tileSize: 128,
-      minZoom: 0,
-      maxZoom: 6,
-      noWrap: true,
-      attribution: 'Dynmap',
+    const DynmapGrid = L.GridLayer.extend({
+      createTile(coords, done) {
+        const tile = document.createElement('img');
+        tile.onload = () => done(null, tile);
+        tile.onerror = () => done(null, tile);
+        tile.src = dynmapUrl(world, renderer, maxZoom, coords.x, coords.y, coords.z);
+        return tile;
+      },
     });
 
-    layer.getTileUrl = function (coords) {
-      // Dynmap z-levels go from 0 (most zoomed out) upward
-      // Leaflet zoom and Dynmap zoom are inversely related when maxZoom is fixed
-      const dz = this.options.maxZoom - coords.z;
-      const dx = coords.x;
-      const dy = coords.y;
-      return `/tiles/${world}/${renderer}/${dz}/${dx}_${dy}.png`;
-    };
+    const layer = new DynmapGrid({
+      tileSize: 128,
+      minZoom: 0,
+      maxZoom,
+      noWrap: true,
+    });
 
     layer.addTo(map);
     layerRef.current = layer;
 
     return () => {
-      map.removeLayer(layer);
+      if (layerRef.current) {
+        map.removeLayer(layerRef.current);
+        layerRef.current = null;
+      }
     };
-  }, [map, world, renderer]);
+  }, [map, world, renderer, config]);
 
   return null;
 }
 
-export { mcToLatLng };

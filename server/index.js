@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
+const path = require('path');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const app = express();
@@ -8,6 +9,12 @@ const PORT = process.env.PORT || 3001;
 const DYNMAP_BASE = process.env.DYNMAP_URL || 'http://127.0.0.1:8123';
 
 app.use(cors());
+
+// Log all incoming requests
+app.use((req, _res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
 
 // Proxy tile requests
 app.use('/tiles', createProxyMiddleware({
@@ -68,6 +75,12 @@ app.get('/api/world/:world/:timestamp', async (req, res) => {
   } catch (err) {
     res.status(502).json({ error: err.message });
   }
+});
+
+// Serve built React frontend
+app.use(express.static(path.join(__dirname, '../client/dist')));
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../client/dist/index.html'));
 });
 
 app.listen(PORT, () => {
