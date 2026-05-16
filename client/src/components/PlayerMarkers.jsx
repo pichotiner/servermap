@@ -59,7 +59,7 @@ function buildIcon(id, name) {
   });
 }
 
-export default function PlayerMarkers({ players, focusPlayer, config, world, renderer }) {
+export default function PlayerMarkers({ players, focusPlayer, onFocusComplete, config, world, renderer }) {
   const map = useMap();
   const markersRef = useRef({});
 
@@ -70,7 +70,10 @@ export default function PlayerMarkers({ players, focusPlayer, config, world, ren
   const tilescale = mapConfig?.tilescale ?? 0;
 
   useEffect(() => {
-    const currentNames = new Set(players.map(p => p.account));
+    // Only show markers for players actually in the world being viewed —
+    // someone in the Nether must not appear on the Overworld map.
+    const visible = players.filter(p => p.world === world);
+    const currentNames = new Set(visible.map(p => p.account));
 
     // Remove stale markers
     for (const name of Object.keys(markersRef.current)) {
@@ -80,7 +83,7 @@ export default function PlayerMarkers({ players, focusPlayer, config, world, ren
       }
     }
 
-    for (const player of players) {
+    for (const player of visible) {
       const { account, uuid, x, y, z } = player;
       const latlng = mcToLatLng(worldtomap, mapzoomout, tilescale, x ?? 0, y ?? 0, z ?? 0);
 
@@ -96,17 +99,20 @@ export default function PlayerMarkers({ players, focusPlayer, config, world, ren
         markersRef.current[account] = marker;
       }
     }
-  }, [map, players, worldtomap, mapzoomout, tilescale]);
+  }, [map, players, world, worldtomap, mapzoomout, tilescale]);
 
-  // Fly to the focused player, zooming in to at least the native level
+  // Fly to the focused player, zooming in to at least the native level.
+  // If the player is in another world, wait until App has switched to it
+  // (the world prop updates and the players list re-polls).
   useEffect(() => {
     if (!focusPlayer) return;
     const player = players.find(p => p.account === focusPlayer);
-    if (!player) return;
+    if (!player || player.world !== world) return;
     const latlng = mcToLatLng(worldtomap, mapzoomout, tilescale, player.x ?? 0, player.y ?? 0, player.z ?? 0);
     const targetZoom = Math.max(map.getZoom(), mapzoomout);
     map.flyTo(latlng, targetZoom, { duration: 0.7 });
-  }, [focusPlayer, players, map, worldtomap, mapzoomout, tilescale]);
+    onFocusComplete?.();
+  }, [focusPlayer, players, world, map, worldtomap, mapzoomout, tilescale]);
 
   useEffect(() => {
     return () => {

@@ -9,6 +9,7 @@ import PlayerList from './components/PlayerList';
 import PlayerMarkers from './components/PlayerMarkers';
 import DynmapLayer from './components/DynmapLayer';
 import MapControls from './components/MapControls';
+import CursorCoords from './components/CursorCoords';
 
 // Simple CRS matching Dynmap flat projection
 const DynmapCRS = L.extend({}, L.CRS.Simple, {
@@ -40,10 +41,13 @@ export default function App() {
     if (firstMap) setCurrentRenderer(firstMap.prefix || firstMap.name);
   };
 
+  // Clicking a player focuses them — switching to their world first if the
+  // player is in a different dimension than the one currently shown.
   const handlePlayerClick = (player) => {
+    if (player.world && player.world !== currentWorld) {
+      handleWorldChange(player.world);
+    }
     setFocusPlayer(player.account);
-    // Clear focus after pan so clicking again still works
-    setTimeout(() => setFocusPlayer(null), 300);
   };
 
   // The map's parent is position:relative, so fill it explicitly —
@@ -74,6 +78,7 @@ export default function App() {
           <PlayerMarkers
             players={players}
             focusPlayer={focusPlayer}
+            onFocusComplete={() => setFocusPlayer(null)}
             config={config}
             world={currentWorld}
             renderer={currentRenderer}
@@ -84,6 +89,11 @@ export default function App() {
             currentRenderer={currentRenderer}
             onWorldChange={handleWorldChange}
             onRendererChange={setCurrentRenderer}
+          />
+          <CursorCoords
+            config={config}
+            world={currentWorld}
+            renderer={currentRenderer}
           />
         </MapContainer>
 
