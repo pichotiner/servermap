@@ -2,19 +2,19 @@ import { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 
-const TILES_PER_REGION = 32;
-
-function dynmapUrl(world, renderer, maxZoom, x, y, z) {
+// Dynmap tile path (see hdmap.js getTileName / getTileInfo):
+//   /tiles/{world}/{prefix}/{x>>5}_{y>>5}/{zoom}{x}_{y}.{fmt}
+// The directory groups 32 tiles per axis and the filename keeps the FULL
+// tile coordinate. Dynmap also inverts the Y axis for HD maps.
+function dynmapUrl(world, renderer, maxZoom, fmt, x, y, z) {
   const zOut = maxZoom - z;
   const scale = 1 << zOut;
-  const nativeTx = x * scale;
-  const nativeTy = y * scale;
-  const regionX = Math.floor(nativeTx / TILES_PER_REGION);
-  const regionZ = Math.floor(nativeTy / TILES_PER_REGION);
-  const localX = ((nativeTx % TILES_PER_REGION) + TILES_PER_REGION) % TILES_PER_REGION;
-  const localZ = ((nativeTy % TILES_PER_REGION) + TILES_PER_REGION) % TILES_PER_REGION;
-  const prefix = zOut === 0 ? '' : 'z'.repeat(zOut) + '_';
-  return `/tiles/${world}/${renderer}/${regionX}_${regionZ}/${prefix}${localX}_${localZ}.jpg`;
+  const tileX = x * scale;
+  const tileY = -y * scale;
+  const dirX = Math.floor(tileX / 32);
+  const dirY = Math.floor(tileY / 32);
+  const zoomPrefix = zOut === 0 ? '' : 'z'.repeat(zOut) + '_';
+  return `/tiles/${world}/${renderer}/${dirX}_${dirY}/${zoomPrefix}${tileX}_${tileY}.${fmt}`;
 }
 
 export default function DynmapLayer({ world, renderer, config }) {
@@ -27,6 +27,7 @@ export default function DynmapLayer({ world, renderer, config }) {
     const worldConfig = config.worlds?.find(w => w.name === world);
     const mapConfig = worldConfig?.maps?.find(m => m.prefix === renderer || m.name === renderer);
     const maxZoom = mapConfig?.mapzoomout ?? 5;
+    const fmt = mapConfig?.['image-format'] || 'png';
 
     if (layerRef.current) {
       map.removeLayer(layerRef.current);
@@ -38,7 +39,7 @@ export default function DynmapLayer({ world, renderer, config }) {
         const tile = document.createElement('img');
         tile.onload = () => done(null, tile);
         tile.onerror = () => done(null, tile);
-        tile.src = dynmapUrl(world, renderer, maxZoom, coords.x, coords.y, coords.z);
+        tile.src = dynmapUrl(world, renderer, maxZoom, fmt, coords.x, coords.y, coords.z);
         return tile;
       },
     });

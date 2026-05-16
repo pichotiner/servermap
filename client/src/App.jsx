@@ -36,7 +36,9 @@ export default function App() {
     setTimeout(() => setFocusPlayer(null), 300);
   };
 
-  const mapStyle = { flex: 1, width: '100%' };
+  // The map's parent is position:relative, so fill it explicitly —
+  // a Leaflet container with no resolved height collapses to 0px.
+  const mapStyle = { position: 'absolute', inset: 0 };
 
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
