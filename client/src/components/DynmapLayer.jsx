@@ -47,7 +47,10 @@ export default function DynmapLayer({ world, renderer, config }) {
     const layer = new DynmapGrid({
       tileSize: 128,
       minZoom: 0,
-      maxZoom,
+      // Dynmap only renders tiles up to `maxZoom` (mapzoomout); beyond that
+      // Leaflet must upscale them instead of dropping the layer entirely.
+      maxNativeZoom: maxZoom,
+      maxZoom: map.getMaxZoom(),
       noWrap: true,
     });
 
