@@ -1,6 +1,14 @@
 import React from 'react';
 import { useMap } from 'react-leaflet';
 
+function worldLabel(world) {
+  const n = (world.name || '').toLowerCase();
+  if (n === 'dim-1' || n.includes('nether')) return 'Незер';
+  if (n === 'dim1' || n.includes('the_end') || n.endsWith('_end')) return 'Энд';
+  if (n === 'world' || n.includes('overworld')) return 'Обычный мир';
+  return world.title || world.name;
+}
+
 export default function MapControls({ config, currentWorld, currentRenderer, onWorldChange, onRendererChange }) {
   const map = useMap();
 
@@ -23,7 +31,7 @@ export default function MapControls({ config, currentWorld, currentRenderer, onW
                 }}
                 onClick={() => onWorldChange(w.name)}
               >
-                {w.title || w.name}
+                {worldLabel(w)}
               </button>
             ))}
           </div>

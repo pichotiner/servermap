@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -22,9 +22,11 @@ export default function App() {
 
   const { config, players, online, error } = useDynmap(currentWorld);
 
-  // Once config loads, pick the first world and its first map
+  // Pick the first world and its first map — only once, when config loads
+  const initRef = useRef(false);
   useEffect(() => {
-    if (!config?.worlds?.length) return;
+    if (initRef.current || !config?.worlds?.length) return;
+    initRef.current = true;
     const w = config.worlds[0];
     setCurrentWorld(w.name);
     if (w.maps?.length) setCurrentRenderer(w.maps[0].prefix || w.maps[0].name);
