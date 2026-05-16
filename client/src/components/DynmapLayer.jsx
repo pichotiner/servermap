@@ -2,13 +2,6 @@ import { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 
-// Converts Minecraft X/Z to Leaflet lat/lng for the Dynmap flat projection
-function mcToLatLng(x, z, map) {
-  // Dynmap flat: each tile = 128 blocks, tileSize=128
-  // The CRS maps x→lng, z→lat with y inverted
-  return map.unproject([x, z], map.getMaxZoom());
-}
-
 export default function DynmapLayer({ world, renderer }) {
   const map = useMap();
   const layerRef = useRef(null);
@@ -20,28 +13,38 @@ export default function DynmapLayer({ world, renderer }) {
       map.removeLayer(layerRef.current);
     }
 
-    // Dynmap uses a custom CRS — we mirror it with a simple TileLayer
-    // URL pattern: /tiles/{world}/{renderer}/{z}/{x}_{y}.png
-    // Leaflet expects {z}/{x}/{y}, so we use a custom getTileUrl
     const layer = L.tileLayer('', {
       tileSize: 128,
       minZoom: 0,
-      maxZoom: 6,
+      maxZoom: 4,
       noWrap: true,
-      attribution: 'Dynmap',
+      crossOrigin: 'anonymous',
     });
 
     layer.getTileUrl = function (coords) {
-      // Dynmap z-levels go from 0 (most zoomed out) upward
-      // Leaflet zoom and Dynmap zoom are inversely related when maxZoom is fixed
-      const dz = this.options.maxZoom - coords.z;
-      const dx = coords.x;
-      const dy = coords.y;
-      return `/tiles/${world}/${renderer}/${dz}/${dx}_${dy}.png`;
+      // Dynmap region-based tile system
+      // Each region is 16x16 tiles = 2048x2048 blocks
+      const tileSize = 16;
+
+      // Calculate region and tile within region
+      const regionX = Math.floor(coords.x / tileSize);
+      const regionZ = Math.floor(coords.y / tileSize);
+      const tileX = coords.x % tileSize;
+      const tileY = coords.y % tileSize;
+
+      // Calculate zoom prefix (z, z2, z3, etc.)
+      const zoomPrefix = coords.z > 0 ? `z${coords.z}_` : '';
+
+      return `/tiles/${world}/${renderer}/${regionX}_${regionZ}/${zoomPrefix}${tileX}_${tileY}.jpg`;
     };
 
     layer.addTo(map);
     layerRef.current = layer;
+
+    // Default center + zoom
+    setTimeout(() => {
+      map.setView([0, 0], 2);
+    }, 100);
 
     return () => {
       map.removeLayer(layer);
@@ -51,4 +54,3 @@ export default function DynmapLayer({ world, renderer }) {
   return null;
 }
 
-export { mcToLatLng };
