@@ -2,54 +2,68 @@ import { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 
-export default function DynmapLayer({ world, renderer }) {
+export default function DynmapLayer({ world, renderer, config }) {
   const map = useMap();
   const layerRef = useRef(null);
 
   useEffect(() => {
-    if (!world || !renderer) return;
+    if (!world || !renderer || !config) return;
 
     if (layerRef.current) {
       map.removeLayer(layerRef.current);
     }
 
+    const mapConfig = config.worlds?.[0]?.maps?.find(m => m.prefix === renderer);
+    if (!mapConfig) return;
+
+    const maxZoom = (mapConfig.mapzoomout ?? 5) + 1;
+    const tileSize = 128;
+    const tilesPerRegion = 16;
+    const blocksPerRegion = tilesPerRegion * tileSize;
+
     const layer = L.tileLayer('', {
-      tileSize: 128,
+      tileSize,
       minZoom: 0,
-      maxZoom: 4,
+      maxZoom,
       noWrap: true,
       crossOrigin: 'anonymous',
     });
 
     layer.getTileUrl = function (coords) {
-      // Dynmap region-based tile system
-      // Each region is 16x16 tiles = 2048x2048 blocks
-      const tileSize = 16;
+      // coords = { x, y, z } from Leaflet
+      // At zoom Z, tile (x,y) covers a certain region of the map
+      // Map pixels at zoom Z: tile covers (tileSize * 2^(maxZoom-Z)) pixels
 
-      // Calculate region and tile within region
-      const regionX = Math.floor(coords.x / tileSize);
-      const regionZ = Math.floor(coords.y / tileSize);
-      const tileX = coords.x % tileSize;
-      const tileY = coords.y % tileSize;
+      const pixelsPerTile = tileSize * Math.pow(2, maxZoom - coords.z);
 
-      // Calculate zoom prefix (z, z2, z3, etc.)
-      const zoomPrefix = coords.z > 0 ? `z${coords.z}_` : '';
+      // Map pixel coordinates for this tile
+      const mapPixelX = coords.x * pixelsPerTile;
+      const mapPixelY = coords.y * pixelsPerTile;
 
-      return `/tiles/${world}/${renderer}/${regionX}_${regionZ}/${zoomPrefix}${tileX}_${tileY}.jpg`;
+      // Dynmap region and tile within region
+      // Regions are 16x16 tiles at native resolution = 2048x2048 pixels
+      const regionPixels = tilesPerRegion * tileSize;
+      const regionX = Math.floor(mapPixelX / regionPixels);
+      const regionY = Math.floor(mapPixelY / regionPixels);
+
+      const tileXInRegion = Math.floor((mapPixelX % regionPixels) / tileSize);
+      const tileYInRegion = Math.floor((mapPixelY % regionPixels) / tileSize);
+
+      // Zoom prefix: z = 1x zoom out, z2 = 2x, etc.
+      const zoomOut = coords.z;
+      const zoomPrefix = zoomOut > 0 ? `z${zoomOut}_` : '';
+
+      return `/tiles/${world}/${renderer}/${regionX}_${regionY}/${zoomPrefix}${tileXInRegion}_${tileYInRegion}.jpg`;
     };
 
     layer.addTo(map);
     layerRef.current = layer;
-
-    // Default center + zoom
-    setTimeout(() => {
-      map.setView([0, 0], 2);
-    }, 100);
+    map.setView([0, 0], 0);
 
     return () => {
-      map.removeLayer(layer);
+      if (layerRef.current) map.removeLayer(layerRef.current);
     };
-  }, [map, world, renderer]);
+  }, [map, world, renderer, config]);
 
   return null;
 }

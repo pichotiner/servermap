@@ -50,15 +50,15 @@ export default function App() {
       <div style={{ flex: 1, position: 'relative', overflow: 'hidden' }}>
         <MapContainer
           center={[0, 0]}
-          zoom={2}
+          zoom={0}
           minZoom={0}
-          maxZoom={6}
+          maxZoom={8}
           crs={DynmapCRS}
           style={mapStyle}
           zoomControl={false}
           attributionControl={false}
         >
-          <DynmapLayer world={currentWorld} renderer={currentRenderer} />
+          <DynmapLayer world={currentWorld} renderer={currentRenderer} config={config} />
           <PlayerMarkers players={players} focusPlayer={focusPlayer} />
           <MapControls
             config={config}
