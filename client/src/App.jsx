@@ -30,6 +30,14 @@ export default function App() {
     if (w.maps?.length) setCurrentRenderer(w.maps[0].prefix || w.maps[0].name);
   }, [config]);
 
+  // Switching world also resets the renderer to a map that exists in it
+  const handleWorldChange = (worldName) => {
+    setCurrentWorld(worldName);
+    const w = config?.worlds?.find(x => x.name === worldName);
+    const firstMap = w?.maps?.[0];
+    if (firstMap) setCurrentRenderer(firstMap.prefix || firstMap.name);
+  };
+
   const handlePlayerClick = (player) => {
     setFocusPlayer(player.account);
     // Clear focus after pan so clicking again still works
@@ -72,8 +80,8 @@ export default function App() {
             config={config}
             currentWorld={currentWorld}
             currentRenderer={currentRenderer}
-            onWorldChange={w => { setCurrentWorld(w); }}
-            onRendererChange={r => setCurrentRenderer(r)}
+            onWorldChange={handleWorldChange}
+            onRendererChange={setCurrentRenderer}
           />
         </MapContainer>
 

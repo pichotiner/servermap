@@ -34,18 +34,21 @@ export default function MapControls({ config, currentWorld, currentRenderer, onW
         <div style={styles.group}>
           <label style={styles.label}>Вид</label>
           <div style={styles.pills}>
-            {maps.map(m => (
-              <button
-                key={m.name}
-                style={{
-                  ...styles.pill,
-                  ...(m.name === currentRenderer ? styles.pillActive : {}),
-                }}
-                onClick={() => onRendererChange(m.name)}
-              >
-                {m.title || m.name}
-              </button>
-            ))}
+            {maps.map(m => {
+              const id = m.prefix || m.name;
+              return (
+                <button
+                  key={id}
+                  style={{
+                    ...styles.pill,
+                    ...(id === currentRenderer ? styles.pillActive : {}),
+                  }}
+                  onClick={() => onRendererChange(id)}
+                >
+                  {m.title || m.name}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
