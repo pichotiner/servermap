@@ -98,13 +98,14 @@ export default function PlayerMarkers({ players, focusPlayer, config, world, ren
     }
   }, [map, players, worldtomap, mapzoomout, tilescale]);
 
-  // Pan to focused player
+  // Fly to the focused player, zooming in to at least the native level
   useEffect(() => {
     if (!focusPlayer) return;
     const player = players.find(p => p.account === focusPlayer);
     if (!player) return;
     const latlng = mcToLatLng(worldtomap, mapzoomout, tilescale, player.x ?? 0, player.y ?? 0, player.z ?? 0);
-    map.setView(latlng, map.getZoom(), { animate: true });
+    const targetZoom = Math.max(map.getZoom(), mapzoomout);
+    map.flyTo(latlng, targetZoom, { duration: 0.7 });
   }, [focusPlayer, players, map, worldtomap, mapzoomout, tilescale]);
 
   useEffect(() => {
