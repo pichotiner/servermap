@@ -76,13 +76,17 @@ export default function PlayerMarkers({ players, focusPlayer, onFocusComplete, c
     // someone in the Nether must not appear on the Overworld map.
     const visible = players.filter(p => p.world === world);
 
-    // Auto-centre on the player group the first time we see them in this world.
+    // Auto-fit all players into view the first time we see them in this world.
     if (autocenteredWorldRef.current !== world && visible.length > 0) {
       autocenteredWorldRef.current = world;
-      const cx = visible.reduce((s, p) => s + (p.x ?? 0), 0) / visible.length;
-      const cy = visible.reduce((s, p) => s + (p.y ?? 0), 0) / visible.length;
-      const cz = visible.reduce((s, p) => s + (p.z ?? 0), 0) / visible.length;
-      map.setView(mcToLatLng(worldtomap, mapzoomout, tilescale, cx, cy, cz), mapzoomout);
+      const latlngs = visible.map(p =>
+        mcToLatLng(worldtomap, mapzoomout, tilescale, p.x ?? 0, p.y ?? 0, p.z ?? 0)
+      );
+      if (latlngs.length === 1) {
+        map.setView(latlngs[0], mapzoomout);
+      } else {
+        map.fitBounds(L.latLngBounds(latlngs), { maxZoom: mapzoomout, padding: [60, 60] });
+      }
     }
     const currentNames = new Set(visible.map(p => p.account));
 
