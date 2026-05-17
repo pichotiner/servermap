@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+import { gemStyle } from '../lib/markerColors';
+
 function worldLabel(name) {
   const n = (name || '').toLowerCase();
   if (n === 'dim-1' || n.includes('nether')) return 'Незер';
@@ -46,7 +48,10 @@ export default function MarkerList({ markers, onMarkerClick, onDelete, onAdd }) 
             {sorted.map(m => (
               <div key={m.id} style={styles.row}>
                 <button style={styles.rowMain} onClick={() => onMarkerClick(m)}>
-                  <span className="crystal-mini" />
+                  <span
+                    className="crystal-mini"
+                    style={gemStyle(m.color, { glow: 5, dropShadow: false })}
+                  />
                   <div style={styles.info}>
                     <span style={styles.name}>{m.label}</span>
                     <span style={styles.coords}>

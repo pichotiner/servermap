@@ -3,6 +3,7 @@ import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 
 import { mcToLatLng, latLngToMc, mapProjection } from '../lib/projection';
+import { gemCssString } from '../lib/markerColors';
 
 // Escape user-supplied text before it goes into marker/popup HTML.
 function esc(s) {
@@ -12,12 +13,12 @@ function esc(s) {
 }
 
 // Minecraft-crystal style diamond icon with the label underneath.
-function buildCrystalIcon(label) {
+function buildCrystalIcon(label, color) {
   return L.divIcon({
     className: '',
     html: `
       <div class="crystal-wrap">
-        <div class="crystal-gem"><span class="crystal-shine"></span></div>
+        <div class="crystal-gem" style="${gemCssString(color)}"><span class="crystal-shine"></span></div>
         <span class="crystal-label">${esc(label)}</span>
       </div>
     `,
@@ -72,11 +73,11 @@ export default function MapMarkers({
       const existing = markersRef.current[m.id];
       if (existing) {
         existing.setLatLng(latlng);
-        existing.setIcon(buildCrystalIcon(m.label));
+        existing.setIcon(buildCrystalIcon(m.label, m.color));
         existing.getPopup()?.setContent(popupHtml(m));
       } else {
         const marker = L.marker(latlng, {
-          icon: buildCrystalIcon(m.label),
+          icon: buildCrystalIcon(m.label, m.color),
           zIndexOffset: 500,
         });
         marker.bindPopup(popupHtml(m));

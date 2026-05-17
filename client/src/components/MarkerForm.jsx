@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 
+import { MARKER_COLORS, DEFAULT_COLOR, gemStyle } from '../lib/markerColors';
+
 function worldLabel(name) {
   const n = (name || '').toLowerCase();
   if (n === 'dim-1' || n.includes('nether')) return 'Незер';
@@ -26,6 +28,7 @@ export default function MarkerForm({
   const [x, setX] = useState('');
   const [y, setY] = useState('64');
   const [z, setZ] = useState('');
+  const [color, setColor] = useState(DEFAULT_COLOR);
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
 
@@ -36,6 +39,7 @@ export default function MarkerForm({
     setX('');
     setY('64');
     setZ('');
+    setColor(DEFAULT_COLOR);
     setError(null);
     setBusy(false);
     setWorld(currentWorld);
@@ -62,6 +66,7 @@ export default function MarkerForm({
       z: Number(z),
       label: label.trim(),
       author: author.trim(),
+      color,
     };
     if (!data.label) {
       setError('Введите название метки');
@@ -160,6 +165,25 @@ export default function MarkerForm({
           </label>
         </div>
 
+        <div style={styles.field}>
+          <span style={styles.fieldLabel}>Цвет метки</span>
+          <div style={styles.swatches}>
+            {MARKER_COLORS.map(c => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setColor(c)}
+                title={c}
+                style={{
+                  ...styles.swatch,
+                  ...gemStyle(c, { glow: 4, dropShadow: false }),
+                  outline: c === color ? '2px solid var(--accent)' : 'none',
+                }}
+              />
+            ))}
+          </div>
+        </div>
+
         <button type="button" style={styles.pickBtn} onClick={onRequestPick}>
           Указать точку на карте
         </button>
@@ -239,6 +263,21 @@ const styles = {
     padding: '7px 9px',
     width: '100%',
     outline: 'none',
+  },
+  swatches: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  swatch: {
+    width: 24,
+    height: 24,
+    transform: 'rotate(45deg)',
+    borderRadius: 4,
+    border: '2px solid',
+    cursor: 'pointer',
+    outlineOffset: 2,
+    margin: 3,
   },
   pickBtn: {
     background: 'var(--surface2)',

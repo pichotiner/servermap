@@ -151,10 +151,13 @@ function saveMarkers(list) {
 
 let markers = loadMarkers();
 
+const COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+const DEFAULT_MARKER_COLOR = '#9aa0a6';
+
 app.get('/api/markers', (_req, res) => res.json(markers));
 
 app.post('/api/markers', (req, res) => {
-  const { world, x, y, z, label, author } = req.body || {};
+  const { world, x, y, z, label, author, color } = req.body || {};
   if (typeof world !== 'string' || !world.trim()) {
     return res.status(400).json({ error: 'world required' });
   }
@@ -165,6 +168,7 @@ app.post('/api/markers', (req, res) => {
   const cleanLabel = String(label || '').trim().slice(0, 60);
   if (!cleanLabel) return res.status(400).json({ error: 'label required' });
   const cleanAuthor = String(author || '').trim().slice(0, 32) || 'Аноним';
+  const cleanColor = COLOR_RE.test(String(color || '')) ? color : DEFAULT_MARKER_COLOR;
 
   const marker = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
@@ -174,6 +178,7 @@ app.post('/api/markers', (req, res) => {
     z: Math.round(nz),
     label: cleanLabel,
     author: cleanAuthor,
+    color: cleanColor,
     createdAt: new Date().toISOString(),
   };
   markers.push(marker);

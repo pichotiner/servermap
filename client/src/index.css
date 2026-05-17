@@ -52,6 +52,7 @@ body {
   pointer-events: none;
 }
 
+/* background, border-color and box-shadow are set inline per marker color */
 .crystal-gem {
   position: relative;
   width: 18px;
@@ -59,10 +60,6 @@ body {
   transform: rotate(45deg);
   border-radius: 3px;
   border: 2px solid #d8feff;
-  background: linear-gradient(135deg, #8bf7ff 0%, #3fc8de 48%, #2a86ad 100%);
-  box-shadow:
-    0 0 9px rgba(120, 240, 255, 0.75),
-    0 2px 6px rgba(0, 0, 0, 0.7);
 }
 
 .crystal-shine {
@@ -87,7 +84,7 @@ body {
   font-family: system-ui, sans-serif;
 }
 
-/* Small crystal used in the marker side panel */
+/* Small crystal used in the marker side panel — colored inline per marker */
 .crystal-mini {
   flex-shrink: 0;
   width: 14px;
@@ -95,8 +92,6 @@ body {
   transform: rotate(45deg);
   border-radius: 2px;
   border: 1.5px solid #d8feff;
-  background: linear-gradient(135deg, #8bf7ff 0%, #3fc8de 48%, #2a86ad 100%);
-  box-shadow: 0 0 5px rgba(120, 240, 255, 0.6);
 }
 
 /* ---- Dark Leaflet popup theme ---- */
