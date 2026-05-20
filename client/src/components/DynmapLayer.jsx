@@ -2,6 +2,10 @@ import { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 
+// How often to re-request visible tiles so newly-rendered chunks and updated
+// builds show up without a page reload. Cheap because unchanged tiles 304.
+const REFRESH_INTERVAL_MS = 30000;
+
 // Dynmap tile path (see hdmap.js getTileName / getTileInfo):
 //   /tiles/{world}/{prefix}/{x>>5}_{y>>5}/{zoom}{x}_{y}.{fmt}
 // The directory groups 32 tiles per axis and the filename keeps the FULL
@@ -64,7 +68,14 @@ export default function DynmapLayer({ world, renderer, config }) {
     layer.addTo(map);
     layerRef.current = layer;
 
+    // Re-fetch visible tiles periodically so updated builds and newly-rendered
+    // chunks appear without the user reloading the page.
+    const refreshTimer = setInterval(() => {
+      if (layerRef.current) layerRef.current.redraw();
+    }, REFRESH_INTERVAL_MS);
+
     return () => {
+      clearInterval(refreshTimer);
       if (layerRef.current) {
         map.removeLayer(layerRef.current);
         layerRef.current = null;
