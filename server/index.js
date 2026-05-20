@@ -34,9 +34,11 @@ const queuedKeys = new Set(); // "world:chunkX:chunkZ" — dedup per session
 
 setInterval(() => {
   if (renderQueue.length === 0) return;
-  const { world, blockX, blockZ, radius } = renderQueue.shift();
+  const job = renderQueue.shift();
+  const { world, blockX, blockZ, radius, key } = job;
   const cmd = `screen -S ${MINECRAFT_SCREEN} -X stuff "dynmap radiusrender ${world} ${blockX} ${blockZ} ${radius}\\r"`;
   exec(cmd, (err) => {
+    if (key) queuedKeys.delete(key);
     if (err) console.error(`[ondemand] screen cmd failed: ${err.message}`);
     else console.log(`[ondemand] render: ${world} (${blockX}, ${blockZ}) r=${radius} — ${renderQueue.length} left`);
   });
@@ -183,6 +185,25 @@ app.post('/api/markers', (req, res) => {
   };
   markers.push(marker);
   saveMarkers(markers);
+
+  // Putting a marker is also a strong "I care what's here" signal — queue a
+  // radiusrender so the area reflects recent block changes within a few
+  // seconds, in case Dynmap's auto-render hasn't caught up.
+  const chunkX = marker.x >> 4;
+  const chunkZ = marker.z >> 4;
+  const key = `${marker.world}:${chunkX}:${chunkZ}`;
+  if (!queuedKeys.has(key) && renderQueue.length < QUEUE_MAX) {
+    queuedKeys.add(key);
+    renderQueue.push({
+      world: marker.world,
+      blockX: marker.x,
+      blockZ: marker.z,
+      radius: 4,
+      key,
+    });
+    console.log(`[markers] queued render at ${marker.world} (${marker.x}, ${marker.z})`);
+  }
+
   res.status(201).json(marker);
 });
 
