@@ -35,8 +35,105 @@ body {
   background: #000;
 }
 
+.leaflet-container.picking {
+  cursor: crosshair;
+}
+
 .leaflet-tile {
   background: #000;
+}
+
+/* ---- Crystal map markers ---- */
+.crystal-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+}
+
+/* background, border-color and box-shadow are set inline per marker color */
+.crystal-gem {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  transform: rotate(45deg);
+  border-radius: 3px;
+  border: 2px solid #d8feff;
+}
+
+.crystal-shine {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.crystal-label {
+  background: rgba(20, 20, 20, 0.92);
+  color: #e8e8e8;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid #3a3a3a;
+  white-space: nowrap;
+  font-family: system-ui, sans-serif;
+}
+
+/* Small crystal used in the marker side panel — colored inline per marker */
+.crystal-mini {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  transform: rotate(45deg);
+  border-radius: 2px;
+  border: 1.5px solid #d8feff;
+}
+
+/* ---- Dark Leaflet popup theme ---- */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+.leaflet-popup-content {
+  margin: 10px 14px;
+}
+
+.leaflet-popup-close-button {
+  color: var(--text-muted) !important;
+}
+
+.marker-popup-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.marker-popup-coords {
+  display: flex;
+  gap: 10px;
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.marker-popup-coords b {
+  color: var(--accent);
+}
+
+.marker-popup-author {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-muted);
 }
 
 ::-webkit-scrollbar {

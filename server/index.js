@@ -13,8 +13,10 @@ const TILES_DIR = process.env.DYNMAP_TILES_DIR || '/home/pichotiner/ServerMine/d
 const MINECRAFT_SCREEN = process.env.MC_SCREEN || 'minecraft';
 const RENDER_INTERVAL_MS = 4000;
 const QUEUE_MAX = 200;
+const MARKERS_FILE = process.env.MARKERS_FILE || path.join(__dirname, 'data', 'markers.json');
 
 app.use(cors());
+app.use(express.json());
 
 // Log all incoming requests
 app.use((req, _res, next) => {
@@ -128,6 +130,68 @@ app.get('/api/skin/:id', async (req, res) => {
     res.set('Content-Type', 'image/png');
     res.send(fallback);
   }
+});
+
+// ---------------------------------------------------------------------------
+// Global map markers — anyone can add a labelled xyz point. Persisted as JSON.
+// ---------------------------------------------------------------------------
+function loadMarkers() {
+  try {
+    const data = JSON.parse(fs.readFileSync(MARKERS_FILE, 'utf8'));
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveMarkers(list) {
+  fs.mkdirSync(path.dirname(MARKERS_FILE), { recursive: true });
+  fs.writeFileSync(MARKERS_FILE, JSON.stringify(list, null, 2));
+}
+
+let markers = loadMarkers();
+
+const COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+const DEFAULT_MARKER_COLOR = '#9aa0a6';
+
+app.get('/api/markers', (_req, res) => res.json(markers));
+
+app.post('/api/markers', (req, res) => {
+  const { world, x, y, z, label, author, color } = req.body || {};
+  if (typeof world !== 'string' || !world.trim()) {
+    return res.status(400).json({ error: 'world required' });
+  }
+  const nx = Number(x), ny = Number(y), nz = Number(z);
+  if (![nx, ny, nz].every(Number.isFinite)) {
+    return res.status(400).json({ error: 'invalid coordinates' });
+  }
+  const cleanLabel = String(label || '').trim().slice(0, 60);
+  if (!cleanLabel) return res.status(400).json({ error: 'label required' });
+  const cleanAuthor = String(author || '').trim().slice(0, 32) || 'Аноним';
+  const cleanColor = COLOR_RE.test(String(color || '')) ? color : DEFAULT_MARKER_COLOR;
+
+  const marker = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+    world: world.trim(),
+    x: Math.round(nx),
+    y: Math.round(ny),
+    z: Math.round(nz),
+    label: cleanLabel,
+    author: cleanAuthor,
+    color: cleanColor,
+    createdAt: new Date().toISOString(),
+  };
+  markers.push(marker);
+  saveMarkers(markers);
+  res.status(201).json(marker);
+});
+
+app.delete('/api/markers/:id', (req, res) => {
+  const idx = markers.findIndex(m => m.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'not found' });
+  markers.splice(idx, 1);
+  saveMarkers(markers);
+  res.status(204).end();
 });
 
 // ---------------------------------------------------------------------------
